@@ -1,3 +1,8 @@
+## 2.0.2
+
+- Fix use-after-free in transmit
+  ([#2](https://github.com/jjanku/dart_pcsc/issues/2))
+
 ## 2.0.1
 
 - Support macOS (@dangfan)
