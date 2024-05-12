@@ -156,7 +156,9 @@ extension _Wrapper on PcscLib {
         ),
       );
 
-      return pbRecvBuffer.asTypedList(pcbRecvLength.value);
+      return Uint8List.fromList(
+        pbRecvBuffer.asTypedList(pcbRecvLength.value),
+      );
     });
   }
 
