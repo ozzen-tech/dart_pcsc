@@ -7,6 +7,7 @@
 // ignore_for_file: type=lint
 import 'dart:ffi' as ffi;
 
+part 'pcsc_lib_types.dart';
 part 'pcsc_lib_win.dart';
 
 class PcscLib {
@@ -442,7 +443,7 @@ final class SCARD_READERSTATE extends ffi.Struct {
   external ffi.Array<ffi.UnsignedChar> rgbAtr;
 }
 
-typedef DWORD = ffi.UnsignedLong;
+typedef DWORD = PcscDword;
 
 /// Protocol Control Information (PCI)
 final class SCARD_IO_REQUEST extends ffi.Struct {
@@ -455,13 +456,13 @@ final class SCARD_IO_REQUEST extends ffi.Struct {
   external int cbPciLength;
 }
 
-typedef LONG = ffi.Long;
+typedef LONG = PcscLong;
 typedef LPCVOID = ffi.Pointer<ffi.Void>;
 typedef LPSCARDCONTEXT = ffi.Pointer<SCARDCONTEXT>;
-typedef SCARDCONTEXT = ffi.IntPtr;
+typedef SCARDCONTEXT = PcscHandle;
 typedef LPCSTR = ffi.Pointer<ffi.Char>;
 typedef LPSCARDHANDLE = ffi.Pointer<SCARDHANDLE>;
-typedef SCARDHANDLE = ffi.IntPtr;
+typedef SCARDHANDLE = PcscHandle;
 typedef LPDWORD = ffi.Pointer<DWORD>;
 typedef LPSTR = ffi.Pointer<ffi.Char>;
 typedef LPBYTE = ffi.Pointer<BYTE>;

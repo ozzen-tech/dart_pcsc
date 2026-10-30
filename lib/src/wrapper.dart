@@ -28,6 +28,18 @@ void _okOrThrow(int result) {
   }
 }
 
+// pcsclite.h packs SCARD_READERSTATE on Apple platforms, so there is no
+// padding between the elements of an array.
+final _readerStateSize = Platform.isMacOS
+    ? 2 * sizeOf<Pointer>() + 3 * sizeOf<DWORD>() + MAX_ATR_SIZE
+    : sizeOf<SCARD_READERSTATE>();
+
+extension on Pointer<SCARD_READERSTATE> {
+  SCARD_READERSTATE at(int index) => Pointer<SCARD_READERSTATE>.fromAddress(
+        address + index * _readerStateSize,
+      ).ref;
+}
+
 extension _Wrapper on PcscLib {
   int establish(Scope scope) {
     return using((alloc) {
@@ -69,11 +81,12 @@ extension _Wrapper on PcscLib {
     return using((alloc) {
       final length = readerStates.length;
 
-      final pStates = alloc<SCARD_READERSTATE>(length);
+      final pStates =
+          alloc<Uint8>(length * _readerStateSize).cast<SCARD_READERSTATE>();
       for (var (i, MapEntry(key: reader, value: state))
           in readerStates.entries.indexed) {
-        pStates[i].szReader = reader.toNativeUtf8(allocator: alloc).cast();
-        pStates[i].dwCurrentState = state;
+        pStates.at(i).szReader = reader.toNativeUtf8(allocator: alloc).cast();
+        pStates.at(i).dwCurrentState = state;
       }
 
       _okOrThrow(
@@ -82,7 +95,7 @@ extension _Wrapper on PcscLib {
 
       return {
         for (var (i, reader) in readerStates.keys.indexed)
-          reader: pStates[i].dwEventState
+          reader: pStates.at(i).dwEventState
       };
     });
   }
