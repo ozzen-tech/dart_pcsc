@@ -73,8 +73,13 @@ class Context {
     while (!completer.isCanceled) {
       late Map<String, int> newReaderStates;
       try {
-        newReaderStates = await pcsc.waitForChange(
+        final changes = await pcsc.waitForChange(
             _hContext, const Duration(minutes: 1), readerStates);
+        newReaderStates = {
+          for (var MapEntry(key: reader, value: (:state, atr: _))
+              in changes.entries)
+            reader: state
+        };
       } on CancelledException {
         break;
       } on TimeoutException {
@@ -153,6 +158,21 @@ class Context {
     return _waitForState(readers, SCARD_STATE_PRESENT);
   }
 
+  /// Returns the current state of the [readers].
+  Future<List<ReaderState>> getReaderStates(List<String> readers) async {
+    if (readers.isEmpty) return [];
+
+    final states = await pcsc.waitForChange(_hContext, Duration.zero,
+        {for (var reader in readers) reader: SCARD_STATE_UNAWARE});
+    return [
+      for (var MapEntry(key: reader, value: (:state, :atr)) in states.entries)
+        ReaderState._internal(
+          reader,
+          state & SCARD_STATE_PRESENT != 0 ? atr : null,
+        )
+    ];
+  }
+
   /// Connects to a card in the [reader].
   Future<Card> connect(
     String reader,
@@ -162,6 +182,21 @@ class Context {
     final connection = await pcsc.connect(_hContext, reader, mode, protocol);
     return Card._internal(connection.hCard, connection.activeProtocol);
   }
+}
+
+/// State of a card reader.
+///
+/// This can be obtained using [Context.getReaderStates].
+class ReaderState {
+  /// Name of the reader.
+  final String reader;
+
+  /// ATR (Answer To Reset) of the card in the [reader].
+  ///
+  /// This is `null` if there is no card in the [reader].
+  final Uint8List? atr;
+
+  ReaderState._internal(this.reader, this.atr);
 }
 
 /// Connection to a smart card.

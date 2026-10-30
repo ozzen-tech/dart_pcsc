@@ -40,6 +40,11 @@ extension on Pointer<SCARD_READERSTATE> {
       ).ref;
 }
 
+extension on SCARD_READERSTATE {
+  Uint8List get atr =>
+      Uint8List.fromList([for (var i = 0; i < cbAtr; i++) rgbAtr[i]]);
+}
+
 extension _Wrapper on PcscLib {
   int establish(Scope scope) {
     return using((alloc) {
@@ -73,7 +78,7 @@ extension _Wrapper on PcscLib {
     });
   }
 
-  Map<String, int> waitForChange(
+  Map<String, ({int state, Uint8List atr})> waitForChange(
     int hContext,
     Duration timeout,
     Map<String, int> readerStates,
@@ -95,7 +100,7 @@ extension _Wrapper on PcscLib {
 
       return {
         for (var (i, reader) in readerStates.keys.indexed)
-          reader: pStates.at(i).dwEventState
+          reader: (state: pStates.at(i).dwEventState, atr: pStates.at(i).atr)
       };
     });
   }
@@ -212,7 +217,7 @@ Future<void> release(int hContext) =>
 Future<List<String>> listReaders(int hContext) =>
     Isolate.run(() => _pcscLib.listReaders(hContext));
 
-Future<Map<String, int>> waitForChange(
+Future<Map<String, ({int state, Uint8List atr})>> waitForChange(
         int hContext, Duration timeout, Map<String, int> readerStates) =>
     Isolate.run(() => _pcscLib.waitForChange(hContext, timeout, readerStates));
 

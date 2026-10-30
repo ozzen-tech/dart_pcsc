@@ -47,6 +47,16 @@ void main() {
         expect(r, isIn(readers));
       }
     });
+
+    test('get reader states', () async {
+      final readers = await context.listReaders();
+      final withCard = await context.waitForCard(readers).value;
+      final states = await context.getReaderStates(readers);
+      expect(states.map((s) => s.reader), equals(readers));
+      for (var s in states) {
+        expect(s.atr, withCard.contains(s.reader) ? isNotEmpty : isNull);
+      }
+    });
   });
 
   group('Card', () {
